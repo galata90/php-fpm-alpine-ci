@@ -45,6 +45,7 @@ RUN set -xe \
         zip \
         pcntl \
         exif \
+        intl \
     && apk del .build-deps \
     && rm -rf /tmp/* \
     && rm -rf /var/www \
