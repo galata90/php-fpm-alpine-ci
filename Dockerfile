@@ -1,53 +1,8 @@
 FROM php:7.3.13-fpm-alpine3.10
 
-# persistent / runtime deps
-ENV PHPIZE_DEPS \
-    autoconf \
-    cmake \
-    file \
-    g++ \
-    gcc \
-    libc-dev \
-    pcre-dev \
-    make \
-    git \
-    pkgconf \
-    re2c \
-    libpng-dev \
-    libjpeg-turbo-dev \
-    libwebp-dev  \
-    libxpm-dev \
-    freetype-dev \
-    zip \
-    libzip 
+COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/bin/
 
-RUN apk add --no-cache --virtual .persistent-deps \
-    libpng \
-    freetype \
-    libjpeg-turbo \
-    libsodium-dev \
-    mysql-client \
-    libzip-dev
-
-RUN set -xe \
-    && apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
-    && docker-php-ext-configure mbstring --enable-mbstring \
-    && docker-php-ext-configure gd --with-gd \
-        --with-freetype-dir=/usr/include/ \
-        --with-png-dir=/usr/include/ \
-        --with-jpeg-dir=/usr/include/ \
-    && docker-php-ext-configure zip \
-    && NPROC=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1) \
-    && docker-php-ext-install -j${NPROC} \
-        gd \
-        pdo_mysql \
-        mbstring \
-        zip \
-        pcntl \
-        exif \
-    && apk del .build-deps \
-    && rm -rf /tmp/* \
-    && rm -rf /var/www \
+RUN install-php-extensions gd pdo_mysql mbstring zip pcntl exif intl \
     && mkdir -p /var/www
 
 COPY --from=composer:1.9.1 /usr/bin/composer /usr/bin/composer
